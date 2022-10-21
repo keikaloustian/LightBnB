@@ -26,7 +26,7 @@ const getUserWithEmail = function(email) {
     .catch((err) => {
       return null;
     });
-}
+};
 exports.getUserWithEmail = getUserWithEmail;
 
 /**
@@ -43,7 +43,7 @@ const getUserWithId = function(id) {
     .catch((err) => {
       return null;
     });
-}
+};
 exports.getUserWithId = getUserWithId;
 
 /**
@@ -65,7 +65,7 @@ const addUser =  function(user) {
     .catch((err) => {
       return null;
     });
-}
+};
 exports.addUser = addUser;
 
 
@@ -90,13 +90,13 @@ const getAllReservations = (guest_id, limit = 10) => {
     LIMIT $2;`,
     [guest_id, limit]
   )
-  .then((result) => {
-    return result.rows;
-  })
-  .catch((err) => {
-    return err.message;
-  })
-}
+    .then((result) => {
+      return result.rows;
+    })
+    .catch((err) => {
+      return err.message;
+    });
+};
 exports.getAllReservations = getAllReservations;
 
 
@@ -112,7 +112,7 @@ exports.getAllReservations = getAllReservations;
  
 */
 
-const getAllProperties = function (options, limit = 10) {
+const getAllProperties = function(options, limit = 10) {
   
   const queryParams = [];
   
@@ -157,8 +157,8 @@ const getAllProperties = function (options, limit = 10) {
     queryString += `cost_per_night <= $${queryParams.length} `;
   }
   
-  queryString += `GROUP BY properties.id`
-    if (options.minimum_rating) {
+  queryString += `GROUP BY properties.id `;
+  if (options.minimum_rating) {
     queryParams.push(`${options.minimum_rating}`);
     queryString += `HAVING AVG(property_reviews.rating) >= $${queryParams.length} `;
   }
@@ -170,13 +170,11 @@ const getAllProperties = function (options, limit = 10) {
   `;
 
   return pool.query(queryString, queryParams)
-  .then((res) => res.rows)
-  .catch((err) => err.message);
+    .then((res) => res.rows)
+    .catch((err) => err.message);
 };
 
 exports.getAllProperties = getAllProperties;
-
-
 
 
 /**
@@ -185,9 +183,50 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
-}
+  const {
+    owner_id,
+    title,
+    description,
+    thumbnail_photo_url,
+    cover_photo_url,
+    cost_per_night,
+    street,
+    city,
+    province,
+    post_code,
+    country,
+    parking_spaces,
+    number_of_bathrooms,
+    number_of_bedrooms
+  } = property;
+
+  const queryParams = [
+    owner_id,
+    title,
+    description,
+    thumbnail_photo_url,
+    cover_photo_url,
+    cost_per_night,
+    parking_spaces,
+    number_of_bathrooms,
+    number_of_bedrooms,
+    country,
+    street,
+    city,
+    province,
+    post_code,
+  ];
+
+  return pool
+    .query(`INSERT INTO properties VALUES (DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, DEFAULT)
+    RETURNING *;`,
+    queryParams)
+    
+    .then((result) => {
+      return result.rows[0];
+    })
+    .catch((err) => {
+      return null;
+    });
+};
 exports.addProperty = addProperty;
